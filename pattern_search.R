@@ -1,14 +1,13 @@
-# Parameter fitting of the VTEC-model using Pattern Search optimization
-# Using the regional information ("laens") to compute the goal function
+# Three-dimensional parameter fitting of a siminf model using Pattern Search optimization
+# Using observed data to compute the goal function.
+# P.Bauer, 2015
 
-#load vtec_model definition and region information
-source('~/tests/new_vtec.R')
-#loads in data
+#loads some kind of fitting data
 data(region)
 
 # max. number of retries if error occur
 maxerrs=10;
-# number of trajectories
+# number of siminf trajectories
 ntr=80;
 #grow ratio
 growratio=1.5;
@@ -17,7 +16,7 @@ growratio=1.5;
 #Sys.setenv(GOMP_CPU_AFFINITY = "0-32");
 #Sys.setenv(OMP_NUM_THREADS = "12");
 
-#generate goal?
+#generate goal function
 compres=TRUE;
 if(compres) {
   #generate one trajectory of the model at goal parameter values (this could be given by data, too)
@@ -41,12 +40,12 @@ if(compres) {
                       epsilon = epsilon)
 
 presult <- siminf(vtec, solver="psiminf", nthreads=12, report_level=0, use_rmatio = FALSE,
-link_matio=FALSE,inputfile='/home/pavpa354/tests/input.mat',outfile='/home/pavpa354/tests/output.mat')
+link_matio=FALSE,inputfile='input.mat',outfile='output.mat')
 res=presult@U/ntr_res;
 }
 
 #perturbation of parameters
-perturbation=1.5683;
+perturbation=runif(1, min = 0, max = 5); 
 k1=response_calves*perturbation;
 k2=response_young_stock*perturbation;
 k3=response_adults*perturbation;
@@ -78,13 +77,13 @@ coretime_hist=NULL;
 k_hist=rbind(k_hist,c(k1,k2,k3));
 delta_hist=rbind(delta_hist,c(delta1,delta2,delta3));
 
-#modification: growing flag
+#growing flag
 grow=0;
 #0: didnt grow
 #1: just grew
 #2: finished growing
 
-#start optimization
+#start optimization loop
 while(total>tol || iter<max_iter) {
   
   #parameters for this iteration: k_1,2,3 +/- delta
@@ -309,7 +308,7 @@ while(total>tol || iter<max_iter) {
   iter=iter+1;
 
   #save all log-files during the execution
-  save(totals_hist,delta_hist,k_hist,errors_hist,coretime_hist,file="last_optim_12.RData")
+  save(totals_hist,delta_hist,k_hist,errors_hist,coretime_hist,file="debug_out.RData")
 }
 #end of optimization loop
 
